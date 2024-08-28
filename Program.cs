@@ -24,7 +24,7 @@ string NOREVERSE = IsOutputRedirected ? "" : "\x1b[27m";
 int round = 0;
 
 
-WriteLine(RED + $"Welcome to the Human Fighter!" + NORMAL);
+WriteLine($"{RED}Welcome to the Human Fighter!{NORMAL}");
 WriteLine("We have successfully invaded Earth. You must now fight humans to eliminate the building resistance and assert our dominance over the planet.");
 WriteLine("What was your name, alien?");
 string getName = ReadLine();
