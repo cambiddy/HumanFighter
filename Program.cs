@@ -32,12 +32,14 @@ string getName = ReadLine();
 Player player = new()
 {
     UserName = getName,
-    UserHP = 115
+    UserHP = 115,
+    UserMP = 100
 };
+
 
 Clear();
 WriteLine("Ah that's right. We've too many soldiers to keep track of.");
-WriteLine("It's time for you to get out there and start eliminating resistance, "+ player.UserName + ". Good luck!");
+WriteLine($"It's time for you to get out there and start eliminating resistance, {player.UserName}. Good luck!");
 WriteLine(NL);
 WriteLine("Press any key to continue...");
 ReadKey();
@@ -47,50 +49,18 @@ newRound();
 
 void newRound()
 {
-    playerInfoDisplay(player);
-    enemyInfoDisplay(EntityLogic.NewEnemy(round));
-
+    Player.PlayerInfoDisplay(player);
+    Entities.EnemyInfoDisplay(EntityLogic.NewEnemy(round));
     userChoice(player, EntityLogic.NewEnemy(round));
 }
 
 
 
 
-static void playerInfoDisplay(Player player)
-{
 
-    WriteLine(player.UserName);
-    WriteLine("HP: " + player.UserHP);
-}
 
-static void enemyInfoDisplay(Entities enemy)
-{
-    WriteLine("You are now fighting: " + enemy.Name);
-    WriteLine(enemy.Description);
-    WriteLine(enemy.Name + " HP: " + enemy.EnemyHP);
-}
 
-static int diceRoll(string nameOfRoller)
-{
-    int diceValue = 0;
-    Random rand1 = new();
-    Random rand2 = new();
-    int Die1 = rand1.Next(1, 13);
-    int Die2 = rand2.Next(1, 13);
-    if (Die1 == Die2)                                           
-    {                                                           
-        diceValue = (Die1 + Die2) * 2;                           
-    }
-    else
 
-    {
-        diceValue = Die1 + Die2;
-    }
-    WriteLine(nameOfRoller + " rolled a " + Die1);
-    WriteLine("And a " + Die2);
-    return diceValue;
-
-}
 
 void userChoice(Player player, Entities enemy)
 {
@@ -104,35 +74,44 @@ void userChoice(Player player, Entities enemy)
     switch (usrActionInput(0, 1)){
         case 0:
             Clear();
-            player.UserHP = Heal(player.UserHP, player.UserName);
-            playerInfoDisplay(player);
-            enemyInfoDisplay(enemy);
+            player.UserHP = Actions.Heal(player.UserHP, player.UserName);
+            Player.PlayerInfoDisplay(player);
+            Entities.EnemyInfoDisplay(enemy);
             WriteLine("Press any key to continue...");
             ReadKey();
             enemyChoice(player, enemy);
             break;
         case 1:
             Clear();
-            enemy.EnemyHP = attack(enemy.EnemyHP, player.UserName, enemy.Name);
-            playerInfoDisplay(player);
-            enemyInfoDisplay(enemy);
-            WriteLine("Press any key to continue...");
-            ReadKey();
-            if (enemy.EnemyHP <= 0)
+            Player.PlayerInfoDisplay(player);
+            WriteLine("Would you like to do a basic attack or a mana attack?");
+            WriteLine("0:Basic attack");
+            WriteLine("1:Mana Attack");
+            switch (usrActionInput(0, 1))
             {
-                Clear();
-                winScreen(player.UserName, enemy.Name);
-                round = round + 1;
+                case 0:
+                    Clear();
+                    enemy.EnemyHP = Actions.Attack(enemy.EnemyHP, player.UserName, enemy.Name);
+                    Player.PlayerInfoDisplay(player);
+                    Entities.EnemyInfoDisplay(enemy);
+                    checkWin(player, enemy);
+                    break;
+                case 1:
+                    Clear();
+                    enemy.EnemyHP = Actions.ManaAttack(enemy.EnemyHP, player.UserName, enemy.Name, player.UserMP, player);
+                    Player.PlayerInfoDisplay(player);
+                    Entities.EnemyInfoDisplay(enemy);
+                    checkWin(player, enemy);
+                    break;
 
-                newRound();
-
-
+                default:
+                    WriteLine("ERRORE");
+                    break;
             }
-            else
-            {
-                enemyChoice(player, enemy);
-            }
-             break;
+
+
+
+            break;
         default:
             WriteLine("ERROR");
             userChoice(player, enemy);
@@ -146,20 +125,20 @@ void enemyChoice(Player player, Entities enemy)
     if (enemy.EnemyHP <= (enemy.StartHP / 4))
     {
         Clear();
-        enemy.EnemyHP = Heal(enemy.EnemyHP, enemy.Name);
-        playerInfoDisplay(player);
-        enemyInfoDisplay(enemy);
+        enemy.EnemyHP = Actions.Heal(enemy.EnemyHP, enemy.Name);
+        Player.PlayerInfoDisplay(player);
+        Entities.EnemyInfoDisplay(enemy);
         userChoice(player, enemy);
 
     }
     else
     {
         Clear();
-        int newHP = attack(player.UserHP, enemy.Name, player.UserName);
+        int newHP = Actions.Attack(player.UserHP, enemy.Name, player.UserName);
 
         player.UserHP = newHP;
-        playerInfoDisplay(player);
-        enemyInfoDisplay(enemy);
+        Player.PlayerInfoDisplay(player);
+        Entities.EnemyInfoDisplay(enemy);
         if (player.UserHP <= 0)
         {
             Clear();
@@ -185,19 +164,6 @@ void enemyChoice(Player player, Entities enemy)
     }
 }
 
-int Heal(int entityHP, string entityName)
-{
-    int healFor = diceRoll(entityName);
-    WriteLine(entityName + " Has healed for " + healFor + " HP!");
-    return entityHP + healFor;
-}
-
-int attack(int attackedHP, string attackerName, string attackedName)
-{
-    int attackFor = diceRoll(attackerName);
-    WriteLine(attackerName + " Has attacked " + attackedName + " for " + attackFor + " HP!");
-    return attackedHP - attackFor;
-}
 
 static int usrActionInput(int rFrom, int rTo)
 {
@@ -222,6 +188,26 @@ static int usrActionInput(int rFrom, int rTo)
     return usrAction;
 }
 
+void checkWin(Player player, Entities enemy)
+{
+    WriteLine("Press any key to continue...");
+    ReadKey();
+
+    if (enemy.EnemyHP <= 0)
+    {
+        Clear();
+        winScreen(player.UserName, enemy.Name);
+        round = round + 1;
+
+        newRound();
+
+
+    }
+    else
+    {
+        enemyChoice(player, enemy);
+    }
+}
 static void winScreen(string playerName, string enemyName)
 {
     WriteLine("Congratulations, " + playerName + ", you defeated " + enemyName + "! Now it's time to move on to your next opponent!");
